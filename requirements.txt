@@ -1,0 +1,7 @@
+Flask
+Flask-SQLAlchemy
+Flask-Migrate
+Flasgger
+Flask-Bcrypt
+flask_script
+marshmallow
