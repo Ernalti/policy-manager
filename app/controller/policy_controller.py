@@ -1,88 +1,84 @@
-from flask import Blueprint, request, jsonify
-from marshmallow import ValidationError
+from fastapi import APIRouter, HTTPException, Depends
+from pydantic import ValidationError
+from app.utils.dto import PolicyDto
+from app.service.policy_service import PolicyService
+from typing import List
 
-from ..utils.dto import PolicyDto
-from ..service.policy_service import PolicyService
+# Инициализация роутера
+router = APIRouter()
 
 # Инициализация сервиса
 policy_service = PolicyService()
 
-# Создаем Blueprint для маршрутов, если необходимо
-policy_bp = Blueprint('policy', __name__)
-
-@policy_bp.route('/policies', methods=['GET'])
-def get_policies():
-    """Get list of policies"""
+@router.get("/policies", response_model=List[PolicyDto])
+async def get_policies():
+    """Получить список политик"""
     try:
-        policies = policy_service.get_all_policies()
-        return jsonify(policies)
+        policies = await policy_service.get_all_policies()
+        return policies
     except Exception as e:
-        return {'message': str(e)}, 500
+        raise HTTPException(status_code=500, detail=str(e))
 
-@policy_bp.route('/policies', methods=['POST'])
-def create_policy():
-    """Create a new policy"""
-    data = request.get_json()
+@router.post("/policies", response_model=PolicyDto, status_code=201)
+async def create_policy(data: PolicyDto):
+    """Создать новую политику"""
     try:
-        # Валидируем входные данные через PolicyDto
-        policy_data = PolicyDto().load(data)
-        policy = policy_service.create_policy(policy_data)
-        return {'message': 'Policy created successfully', 'policy': policy}, 201
+        policy = await policy_service.create_policy(data)
+        return policy
     except ValidationError as e:
-        return {'message': 'Validation failed', 'errors': e.messages}, 400
+        raise HTTPException(status_code=400, detail=e.errors())
     except Exception as e:
-        return {'message': str(e)}, 500
+        raise HTTPException(status_code=500, detail=str(e))
 
-
-@policy_bp.route('/policies/<int:id>', methods=['GET'])
-def get_policy(id):
-    """Get a policy by its ID"""
+@router.get("/policies/{id}", response_model=PolicyDto)
+async def get_policy(id: int):
+    """Получить политику по ID"""
     try:
-        policy = policy_service.get_policy_by_id(id)
+        policy = await policy_service.get_policy_by_id(id)
         if policy:
-            return jsonify(policy)
+            return policy
         else:
-            return {'message': 'Policy not found'}, 404
+            raise HTTPException(status_code=404, detail="Policy not found")
     except Exception as e:
-        return {'message': str(e)}, 500
+        raise HTTPException(status_code=500, detail=str(e))
 
-@policy_bp.route('/policies/<int:id>', methods=['PUT'])
-def update_policy(id):
-    """Update an existing policy"""
-    data = request.get_json()
+@router.put("/policies/{id}", response_model=PolicyDto)
+async def update_policy(id: int, data: PolicyDto):
+    """Обновить существующую политику"""
     try:
-        policy_data = PolicyDto().load(data)
-        updated_policy = policy_service.update_policy(id, policy_data)
+        updated_policy = await policy_service.update_policy(id, data)
         if updated_policy:
-            return {'message': 'Policy updated successfully', 'policy': updated_policy}, 200
+            return updated_policy
         else:
-            return {'message': 'Policy not found'}, 404
+            raise HTTPException(status_code=404, detail="Policy not found")
     except ValidationError as e:
-        return {'message': 'Validation failed', 'errors': e.messages}, 400
+        raise HTTPException(status_code=400, detail=e.errors())
     except Exception as e:
-        return {'message': str(e)}, 500
+        raise HTTPException(status_code=500, detail=str(e))
 
-@policy_bp.route('/policies/<int:id>', methods=['DELETE'])
-def delete_policy(id):
-    """Delete a policy by its ID"""
+@router.delete("/policies/{id}", status_code=200)
+async def delete_policy(id: int):
+    """Удалить политику по ID"""
     try:
-        success = policy_service.delete_policy(id)
+        success = await policy_service.delete_policy(id)
         if success:
-            return {'message': 'Policy deleted successfully'}, 200
+            return {"message": "Policy deleted successfully"}
         else:
-            return {'message': 'Policy not found'}, 404
+            raise HTTPException(status_code=404, detail="Policy not found")
     except Exception as e:
-        return {'message': str(e)}, 500
+        raise HTTPException(status_code=500, detail=str(e))
 
-@policy_bp.route('/policies/<int:policy_id>/validate', methods=['POST'])
-def validate_policy_text(policy_id):
-    data = request.get_json()
-    if not data or 'text' not in data:
-        return jsonify({"message": "Text is required"}), 400
+@router.post("/policies/{policy_id}/validate", status_code=200)
+async def validate_policy_text(policy_id: int, text: str):
+    """Валидация текста политики"""
+    try:
+        if not text:
+            raise HTTPException(status_code=400, detail="Text is required")
 
-    # Валидация текста
-    result = PolicyService.validate_policy_text_for_id(policy_id, data['text'])
-    if result:
-        return jsonify({"message": "Validation successful"}), 200
-    else:
-        return jsonify({"message": "Text does not match the first letter of the policy text"}), 400
+        result = await policy_service.validate_policy_text_for_id(policy_id, text)
+        if result:
+            return {"message": "Validation successful"}
+        else:
+            raise HTTPException(status_code=400, detail="Text does not match the first letter of the policy text")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

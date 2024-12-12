@@ -1,31 +1,41 @@
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-from flask_bcrypt import Bcrypt
-from flask_migrate import Migrate
+from fastapi import FastAPI
+from fastapi.responses import JSONResponse
+from app.config import settings
+from app.db import init_db
+from app.controller.policy_controller import router as policy_router
 
-from .config import config_by_name
-from .model.user import User
-from .model.policy import Policy
+# Создаем приложение FastAPI
+def create_app() -> FastAPI:
+    app = FastAPI(
+        title=settings.APP_NAME,
+        version=settings.VERSION,
+        debug=settings.DEBUG
+    )
 
-db = SQLAlchemy()
-flask_bcrypt = Bcrypt()
-migrate = Migrate()
+    # Подключение маршрутов
+    app.include_router(policy_router, prefix="/api")
 
+    # События приложения
+    @app.on_event("startup")
+    async def startup():
+        # Инициализация базы данных
+        await init_db()
 
-def create_app(config_name):
-    app = Flask(__name__)
-    app.config.from_object(config_by_name[config_name])
+    @app.on_event("shutdown")
+    async def shutdown():
+        # Здесь можно добавить логику для завершения работы (например, закрытие подключений)
+        pass
 
-    db.init_app(app)
-    flask_bcrypt.init_app(app)
+    # Обработка глобальных ошибок
+    @app.exception_handler(Exception)
+    async def global_exception_handler(request, exc):
+        # Логирование исключений можно добавить, например, в систему мониторинга
+        return JSONResponse(
+            status_code=500,
+            content={"message": "Internal Server Error", "details": str(exc)}
+        )
 
-    # Инициализация Flask-Migrate
-    migrate = Migrate(app, db)
+    return app
 
-
-def init_db():
-    with app.app_context():
-        db = get_db()
-        with app.open_resource('schema.sql', mode='r') as f:
-            db.cursor().executescript(f.read())
-        db.commit()
+# Экспортируем приложение для использования в run.py
+app = create_app()

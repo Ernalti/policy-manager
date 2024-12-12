@@ -1,4 +1,5 @@
 from ..model.policy import Policy
+from ..dto.policy_dto import PolicyDto  # Импортируем PolicyDto
 from .. import db
 
 class PolicyService:
@@ -7,7 +8,7 @@ class PolicyService:
         """Получение всех политик."""
         try:
             policies = Policy.query.all()
-            return [policy.to_dict() for policy in policies]
+            return [PolicyDto.from_policy(policy).dict() for policy in policies]  # Преобразуем в DTO
         except Exception as e:
             raise Exception(f"Error retrieving policies: {str(e)}")
 
@@ -16,7 +17,7 @@ class PolicyService:
         try:
             policy = Policy.query.get(id)
             if policy:
-                return policy.to_dict()
+                return PolicyDto.from_policy(policy).dict()  # Преобразуем в DTO
             return None
         except Exception as e:
             raise Exception(f"Error retrieving policy with id {id}: {str(e)}")
@@ -24,10 +25,11 @@ class PolicyService:
     def create_policy(self, policy_data):
         """Создание новой политики."""
         try:
-            policy = Policy(**policy_data)
+            # Преобразуем DTO в модель Policy
+            policy = PolicyDto.to_policy(policy_data)
             db.session.add(policy)
             db.session.commit()
-            return policy.to_dict()
+            return PolicyDto.from_policy(policy).dict()  # Возвращаем DTO
         except Exception as e:
             db.session.rollback()
             raise Exception(f"Error creating policy: {str(e)}")
@@ -40,7 +42,7 @@ class PolicyService:
                 for key, value in policy_data.items():
                     setattr(policy, key, value)
                 db.session.commit()
-                return policy.to_dict()
+                return PolicyDto.from_policy(policy).dict()  # Возвращаем DTO
             return None
         except Exception as e:
             db.session.rollback()

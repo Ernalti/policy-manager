@@ -1,60 +1,27 @@
-from ..model.user import User
-from .. import db
+from app.model.user import User
+from app import db
 
 class UserService:
+    """Service for handling user-related operations."""
 
-    def get_all_users(self):
-        """Получение всех пользователей."""
-        try:
-            users = User.query.all()
-            return [user.to_dict() for user in users]  # Метод to_dict должен быть реализован в модели User
-        except Exception as e:
-            raise Exception(f"Error retrieving users: {str(e)}")
+    @staticmethod
+    def create_user(username: str, email: str, password: str) -> User:
+        """Create a new user and save to the database."""
+        user = User(username=username, email=email)
+        user.password = password  # This will hash the password
+        db.session.add(user)
+        db.session.commit()
+        return user
 
-    def get_user_by_id(self, id):
-        """Получение пользователя по ID."""
-        try:
-            user = User.query.get(id)
-            if user:
-                return user.to_dict()
-            return None
-        except Exception as e:
-            raise Exception(f"Error retrieving user with id {id}: {str(e)}")
+    @staticmethod
+    def get_user_by_id(user_id: int) -> User:
+        """Retrieve a user by their ID."""
+        return User.query.get(user_id)
 
-    def create_user(self, user_data):
-        """Создание нового пользователя."""
-        try:
-            user = User(**user_data)
-            db.session.add(user)
-            db.session.commit()
-            return user.to_dict()
-        except Exception as e:
-            db.session.rollback()
-            raise Exception(f"Error creating user: {str(e)}")
-
-    def update_user(self, id, user_data):
-        """Обновление пользователя."""
-        try:
-            user = User.query.get(id)
-            if user:
-                for key, value in user_data.items():
-                    setattr(user, key, value)
-                db.session.commit()
-                return user.to_dict()
-            return None
-        except Exception as e:
-            db.session.rollback()
-            raise Exception(f"Error updating user with id {id}: {str(e)}")
-
-    def delete_user(self, id):
-        """Удаление пользователя."""
-        try:
-            user = User.query.get(id)
-            if user:
-                db.session.delete(user)
-                db.session.commit()
-                return True
-            return False
-        except Exception as e:
-            db.session.rollback()
-            raise Exception(f"Error deleting user with id {id}: {str(e)}")
+    @staticmethod
+    def authenticate_user(username: str, password: str) -> bool:
+        """Check if the provided username and password match."""
+        user = User.query.filter_by(username=username).first()
+        if user and user.check_password(password):
+            return True
+        return False

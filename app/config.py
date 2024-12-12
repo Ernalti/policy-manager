@@ -1,41 +1,28 @@
 import os
+from pydantic_settings import BaseSettings
+from typing import ClassVar
 
-# uncomment the line below for postgres database url from environment variable
-# postgres_local_base = os.environ['DATABASE_URL']
+class Settings(BaseSettings):
+    """Конфигурация приложения."""
 
-basedir = os.path.abspath(os.path.dirname(__file__))
+    # Основные параметры
+    APP_NAME: str = "Policy Manager"
+    VERSION: str = "1.0"
+    DEBUG: bool = True
 
-class Config:
-    SECRET_KEY = os.getenv('SECRET_KEY', 'my_secret_key')
-    DEBUG = False
+    # Настройки базы данных
+    DATABASE_URL: str = "sqlite+aiosqlite:///./test.db" # SQLite по умолчанию, можно заменить на PostgreSQL/MySQL
 
+    # Секретный ключ для токенов или других операций
+    SECRET_KEY: str = "super-secret-key"
 
-class DevelopmentConfig(Config):
-    # uncomment the line below to use postgres
-    # SQLALCHEMY_DATABASE_URI = postgres_local_base
-    DEBUG = True
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'flask_main.db')
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    # Настройки для разработки и продакшена
+    ENV: str = "development"
+    RELOAD: bool = True
 
-
-class TestingConfig(Config):
-    DEBUG = True
-    TESTING = True
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, ' flask_test.db')
-    PRESERVE_CONTEXT_ON_EXCEPTION = False
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    class Config:
+        env_file = ".env"  # Загружаем переменные из файла .env
 
 
-class ProductionConfig(Config):
-    DEBUG = False
-    # uncomment the line below to use postgres
-    # SQLALCHEMY_DATABASE_URI = postgres_local_base
-
-
-config_by_name = dict(
-    dev=DevelopmentConfig,
-    test=TestingConfig,
-    prod=ProductionConfig
-)
-
-key = Config.SECRET_KEY
+# Создаем объект настроек, который можно использовать в приложении
+settings = Settings()
