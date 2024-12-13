@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from app.dto.user_dto import UserDto
+from app.utils.dto import UserDto
 from app.service.user_service import UserService
 
 router = APIRouter()

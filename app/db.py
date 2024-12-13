@@ -16,11 +16,5 @@ SessionLocal = sessionmaker(
 )
 
 async def init_db():
-    """
-    Функция для инициализации базы данных.
-    Здесь можно выполнять миграции или другие стартовые задачи.
-    """
     async with engine.begin() as conn:
-        # Если используются Alembic миграции, можно вызвать их здесь
-        # await conn.run_sync(Base.metadata.create_all)  # Создание таблиц, если их нет
-        print("База данных инициализирована")
+        await conn.run_sync(Base.metadata.create_all)

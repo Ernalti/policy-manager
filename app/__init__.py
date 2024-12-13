@@ -1,8 +1,11 @@
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
+
 from app.config import settings
-from app.db import init_db
 from app.controller.policy_controller import router as policy_router
+from app.controller.user_controller import router as user_router
+from app.db import init_db
+
 
 # Создаем приложение FastAPI
 def create_app() -> FastAPI:
@@ -13,7 +16,8 @@ def create_app() -> FastAPI:
     )
 
     # Подключение маршрутов
-    app.include_router(policy_router, prefix="/api")
+    app.include_router(policy_router, prefix="")
+    app.include_router(user_router, prefix="")
 
     # События приложения
     @app.on_event("startup")
@@ -36,6 +40,7 @@ def create_app() -> FastAPI:
         )
 
     return app
+
 
 # Экспортируем приложение для использования в run.py
 app = create_app()

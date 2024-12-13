@@ -1,6 +1,6 @@
 from app.model.user import User
 from app import db
-
+from app.storage.user_storage import UserStorage
 class UserService:
     """Service for handling user-related operations."""
 
@@ -9,8 +9,7 @@ class UserService:
         """Create a new user and save to the database."""
         user = User(username=username, email=email)
         user.password = password  # This will hash the password
-        db.session.add(user)
-        db.session.commit()
+        UserStorage.add_user(user)
         return user
 
     @staticmethod

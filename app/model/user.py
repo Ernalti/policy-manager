@@ -1,20 +1,21 @@
 from .. import db
 from flask_bcrypt import generate_password_hash, check_password_hash
+
 from app.db import Base
+from sqlalchemy import Column, Integer, String
 
-
-class User(db.Base):
+class User(Base):
     """Модель пользователя для хранения данных о пользователе."""
     __tablename__ = 'users'
 
     # Уникальный идентификатор пользователя
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     # Имя пользователя, должно быть уникальным и не может быть пустым
-    username = db.Column(db.String(80), unique=True, nullable=False)
+    username = Column(String(80), unique=True, nullable=False)
     # Электронная почта пользователя (не обязательная)
-    email = db.Column(db.String(255), unique=True, nullable=True)
+    email = Column(String(255), unique=True, nullable=True)
     # Хэш пароля, который хранится безопасно
-    password_hash = db.Column(db.String(128), nullable=False)
+    password_hash = Column(String(128), nullable=False)
 
     @property
     def password(self):

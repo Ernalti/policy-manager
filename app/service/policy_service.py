@@ -1,6 +1,8 @@
 from ..model.policy import Policy
-from ..dto.policy_dto import PolicyDto  # Импортируем PolicyDto
+from ..utils.dto import  PolicyDto  # Импортируем PolicyDto
 from .. import db
+from app.storage.policy_storage import PolicyStorage
+
 
 class PolicyService:
 
@@ -27,8 +29,7 @@ class PolicyService:
         try:
             # Преобразуем DTO в модель Policy
             policy = PolicyDto.to_policy(policy_data)
-            db.session.add(policy)
-            db.session.commit()
+            PolicyStorage.add_policy(policy)
             return PolicyDto.from_policy(policy).dict()  # Возвращаем DTO
         except Exception as e:
             db.session.rollback()
