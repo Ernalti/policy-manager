@@ -14,7 +14,7 @@ class Policy(Base):
     creator_id = Column(Integer, ForeignKey('users.id'), nullable=False)
 
     # Relationship to associate policies with their creators
-    creator = relationship('User', back_populates='policies')
+    # creator = relationship('User', back_populates='policies')
 
     def __repr__(self):
         """String representation of the policy object."""

@@ -1,6 +1,9 @@
+from flask import session
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.model.user import User
+from sqlalchemy.orm import sessionmaker
+from app.db import SessionLocal
 
 class UserStorage:
     """Storage class for user-related database operations."""
@@ -31,3 +34,7 @@ class UserStorage:
         if user:
             await self.session.delete(user)
             await self.session.commit()
+
+    async def get_users(self) -> list[User] | None:
+        result = await self.session.execute((select(User)))
+        return result

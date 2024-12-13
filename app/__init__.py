@@ -4,6 +4,8 @@ from fastapi.responses import JSONResponse
 from app.config import settings
 from app.controller.policy_controller import router as policy_router
 from app.controller.user_controller import router as user_router
+from app.storage.user_storage import UserStorage
+from app.service.user_service import UserService
 from app.db import init_db
 
 
